@@ -11,13 +11,13 @@ export class FeedService {
     // Exemple : récupérer des events (tu peux adapter selon pageType)
     const events = await prisma.events.findMany({
       take: limit,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
       ...(cursor && { skip: 1, cursor: { id: Number(cursor) } }),
     });
 
     // const articles = await prisma.articles.findMany({
     //   take: limit,
-    //   orderBy: { createdAt: 'desc' },
+    //   orderBy: { created_at: 'desc' },
     // });
 
     // Exemple : transformer les résultats en format attendu par Flutter
@@ -33,10 +33,11 @@ export class FeedService {
         type: 'event',
         payload: {
           id: e.id,
-          title: e.title,
-          date: e.date,
-          location: e.location,
-          image: e.image,
+          titre: e.titre,
+          date_debut: e.date_debut,
+          date_fin: e.date_fin,
+          lieu: e.lieu,
+          affiche: e.affiche,
         },
       })),
       // ...articles.map((a) => ({
