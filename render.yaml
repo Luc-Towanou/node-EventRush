@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: eventrush-api
+    name: node-EventRush
     env: node
     plan: free
     buildCommand: |
