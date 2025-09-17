@@ -9,16 +9,16 @@ export class FeedService {
     const { pageType, limit, cursor } = params;
 
     // Exemple : récupérer des events (tu peux adapter selon pageType)
-    const events = await prisma.event.findMany({
+    const events = await prisma.events.findMany({
       take: limit,
       orderBy: { createdAt: 'desc' },
       ...(cursor && { skip: 1, cursor: { id: Number(cursor) } }),
     });
 
-    const articles = await prisma.article.findMany({
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-    });
+    // const articles = await prisma.articles.findMany({
+    //   take: limit,
+    //   orderBy: { createdAt: 'desc' },
+    // });
 
     // Exemple : transformer les résultats en format attendu par Flutter
     const items = [
@@ -39,15 +39,15 @@ export class FeedService {
           image: e.image,
         },
       })),
-      ...articles.map((a) => ({
-        type: 'article',
-        payload: {
-          id: a.id,
-          title: a.title,
-          content: a.content,
-          image: a.image,
-        },
-      })),
+      // ...articles.map((a) => ({
+      //   type: 'article',
+      //   payload: {
+      //     id: a.id,
+      //     title: a.title,
+      //     content: a.content,
+      //     image: a.image,
+      //   },
+      // })),
     ];
 
     // Pagination simplifiée
