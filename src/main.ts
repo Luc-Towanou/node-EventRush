@@ -7,6 +7,6 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 
   // await app.listen(port ?? 3000, '0.0.0.0');
-  console.log(`🚀 Server running on port ${port || 3000}`);
+  console.log(`🚀 Server running on port ${port}`);
 }
 bootstrap();
