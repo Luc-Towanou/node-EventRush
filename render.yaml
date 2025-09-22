@@ -1,4 +1,3 @@
-# //render.yaml
 services:
   - type: web
     name: node-EventRush
@@ -8,7 +7,7 @@ services:
       npm install
       npx prisma generate
       npm run build
-    startCommand: npm run start:prod
+    startCommand: npm run start:migrate:prod
     envVars:
       - key: DATABASE_URL
-        sync: false   # tu le définis dans Render Dashboard
+        sync: false
