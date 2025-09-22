@@ -1,3 +1,4 @@
+# //render.yaml
 services:
   - type: web
     name: node-EventRush
@@ -11,5 +12,3 @@ services:
     envVars:
       - key: DATABASE_URL
         sync: false   # tu le définis dans Render Dashboard
-      - key: PORT
-        value: 10000
