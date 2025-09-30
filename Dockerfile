@@ -1,5 +1,5 @@
 # Étape 1 : Builder
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 # Crée le dossier app
 WORKDIR /app
@@ -18,7 +18,7 @@ RUN npm run build
 
 
 # Étape 2 : Runner
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
@@ -26,8 +26,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --only=production
 
+# <--- garde aussi ton schema si migrations/seed
+COPY --from=builder /app/prisma ./prisma   
+
 # Copie le build depuis l'étape précédente
 COPY --from=builder /app/dist ./dist
+
 
 # Expose le port (par défaut Nest utilise 3000)
 EXPOSE 3000
