@@ -1,3 +1,4 @@
+// feed.service.spects
 import { Test, TestingModule } from '@nestjs/testing';
 import { FeedService } from './feed.service';
 
@@ -9,7 +10,7 @@ describe('FeedService', () => {
       providers: [FeedService],
     }).compile();
 
-    service = module.get<FeedService>(FeedService);
+    service = module.get<FeedService>(FeedService); 
   });
 
   it('should be defined', () => {
