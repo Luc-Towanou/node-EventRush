@@ -1,0 +1,502 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.articles (
+  id bigint NOT NULL DEFAULT nextval('articles_id_seq'::regclass),
+  utilisateur_id bigint,
+  description text,
+  type character varying,
+  objet_statut character varying NOT NULL DEFAULT 'actif'::character varying,
+  title character varying NOT NULL,
+  excerpt character varying,
+  content text NOT NULL,
+  cover character varying,
+  read_time character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT articles_pkey PRIMARY KEY (id),
+  CONSTRAINT articles_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.badges (
+  id bigint NOT NULL DEFAULT nextval('badges_id_seq'::regclass),
+  nom character varying NOT NULL,
+  icone character varying,
+  description text,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT badges_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.billet_scans_en_attente (
+  id bigint NOT NULL DEFAULT nextval('billet_scans_en_attente_id_seq'::regclass),
+  billet_id bigint NOT NULL,
+  scanneur_id bigint NOT NULL,
+  initiated_at timestamp without time zone NOT NULL,
+  code character varying NOT NULL UNIQUE,
+  status character varying NOT NULL DEFAULT 'en_attente'::character varying CHECK (status::text = ANY (ARRAY['en_attente'::character varying, 'validé'::character varying, 'rejeté'::character varying]::text[])),
+  expires_at timestamp without time zone,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT billet_scans_en_attente_pkey PRIMARY KEY (id),
+  CONSTRAINT billet_scans_en_attente_billet_id_foreign FOREIGN KEY (billet_id) REFERENCES public.billets(id),
+  CONSTRAINT billet_scans_en_attente_scanneur_id_foreign FOREIGN KEY (scanneur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.billets (
+  id bigint NOT NULL DEFAULT nextval('billets_id_seq'::regclass),
+  event_id bigint NOT NULL,
+  utilisateur_id bigint NOT NULL,
+  ticket_id bigint NOT NULL,
+  methode character varying NOT NULL DEFAULT 'mobile_money'::character varying CHECK (methode::text = ANY (ARRAY['carte'::character varying::text, 'PayPal'::character varying::text, 'mobile_money'::character varying::text])),
+  status character varying NOT NULL DEFAULT 'en_attente'::character varying CHECK (status::text = ANY (ARRAY['en_attente'::character varying::text, 'paye'::character varying::text, 'echoue'::character varying::text])),
+  status_scan character varying NOT NULL DEFAULT 'false'::character varying CHECK (status_scan::text = ANY (ARRAY['false'::character varying::text, 'scanné'::character varying::text])),
+  scanned_at date,
+  montant numeric NOT NULL,
+  qr_code uuid UNIQUE,
+  reference character varying NOT NULL UNIQUE,
+  billet_fedapay_id bigint,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  scanned_by bigint,
+  CONSTRAINT billets_pkey PRIMARY KEY (id),
+  CONSTRAINT billets_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id),
+  CONSTRAINT billets_scanned_by_foreign FOREIGN KEY (scanned_by) REFERENCES public.utilisateurs(id),
+  CONSTRAINT billets_ticket_id_foreign FOREIGN KEY (ticket_id) REFERENCES public.tickets(id),
+  CONSTRAINT billets_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.commentaires (
+  id bigint NOT NULL DEFAULT nextval('commentaires_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  contenu text,
+  note smallint,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  commentable_id bigint,
+  commentable_type character varying,
+  CONSTRAINT commentaires_pkey PRIMARY KEY (id),
+  CONSTRAINT commentaires_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.community_posts (
+  id bigint NOT NULL DEFAULT nextval('community_posts_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  contenu text NOT NULL,
+  image character varying,
+  description text,
+  type character varying,
+  objet_statut character varying NOT NULL DEFAULT 'actif'::character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT community_posts_pkey PRIMARY KEY (id),
+  CONSTRAINT community_posts_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.email_verifications (
+  id bigint NOT NULL DEFAULT nextval('email_verifications_id_seq'::regclass),
+  email character varying NOT NULL UNIQUE,
+  token character varying NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT email_verifications_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.event_highlights (
+  id bigint NOT NULL DEFAULT nextval('event_highlights_id_seq'::regclass),
+  utilisateur_id bigint,
+  description text,
+  type character varying,
+  objet_statut character varying NOT NULL DEFAULT 'actif'::character varying,
+  event_id bigint,
+  media_path character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT event_highlights_pkey PRIMARY KEY (id),
+  CONSTRAINT event_highlights_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id),
+  CONSTRAINT event_highlights_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.event_photos (
+  id bigint NOT NULL DEFAULT nextval('event_photos_id_seq'::regclass),
+  event_id bigint NOT NULL,
+  image_path character varying NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT event_photos_pkey PRIMARY KEY (id),
+  CONSTRAINT event_photos_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.event_posts (
+  id bigint NOT NULL DEFAULT nextval('event_posts_id_seq'::regclass),
+  event_id bigint NOT NULL,
+  utilisateur_id bigint NOT NULL,
+  titre character varying NOT NULL,
+  contenu text NOT NULL,
+  image character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT event_posts_pkey PRIMARY KEY (id),
+  CONSTRAINT event_posts_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id),
+  CONSTRAINT event_posts_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.event_scanneurs (
+  id bigint NOT NULL DEFAULT nextval('event_scanneurs_id_seq'::regclass),
+  event_id bigint NOT NULL,
+  utilisateur_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT event_scanneurs_pkey PRIMARY KEY (id),
+  CONSTRAINT event_scanneurs_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id),
+  CONSTRAINT event_scanneurs_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.event_tag (
+  event_id bigint NOT NULL,
+  tag_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT event_tag_pkey PRIMARY KEY (event_id, tag_id),
+  CONSTRAINT event_tag_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id),
+  CONSTRAINT event_tag_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES public.tags(id)
+);
+CREATE TABLE public.event_vues (
+  id bigint NOT NULL DEFAULT nextval('event_vues_id_seq'::regclass),
+  event_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  utilisateur_id bigint,
+  adresse_ip character varying,
+  CONSTRAINT event_vues_pkey PRIMARY KEY (id),
+  CONSTRAINT event_vues_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.events (
+  id bigint NOT NULL DEFAULT nextval('events_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  titre character varying NOT NULL,
+  description text NOT NULL,
+  date_debut date NOT NULL,
+  date_fin date NOT NULL,
+  lieu character varying NOT NULL,
+  statut character varying NOT NULL DEFAULT 'brouillon'::character varying CHECK (statut::text = ANY (ARRAY['brouillon'::character varying::text, 'publié'::character varying::text, 'annulé'::character varying::text])),
+  affiche character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  points integer NOT NULL DEFAULT 0,
+  nbr_achat integer NOT NULL DEFAULT 0,
+  latitude numeric,
+  longitude numeric,
+  CONSTRAINT events_pkey PRIMARY KEY (id),
+  CONSTRAINT events_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.failed_jobs (
+  id bigint NOT NULL DEFAULT nextval('failed_jobs_id_seq'::regclass),
+  uuid character varying NOT NULL UNIQUE,
+  connection text NOT NULL,
+  queue text NOT NULL,
+  payload text NOT NULL,
+  exception text NOT NULL,
+  failed_at timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT failed_jobs_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.favoris (
+  id bigint NOT NULL DEFAULT nextval('favoris_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  event_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT favoris_pkey PRIMARY KEY (id),
+  CONSTRAINT favoris_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id),
+  CONSTRAINT favoris_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.lifestyle_posts (
+  id bigint NOT NULL DEFAULT nextval('lifestyle_posts_id_seq'::regclass),
+  title character varying NOT NULL,
+  image character varying,
+  category character varying,
+  description text,
+  type character varying,
+  objet_statut character varying NOT NULL DEFAULT 'actif'::character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT lifestyle_posts_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.migrations (
+  id integer NOT NULL DEFAULT nextval('migrations_id_seq'::regclass),
+  migration character varying NOT NULL,
+  batch integer NOT NULL,
+  CONSTRAINT migrations_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.notifications (
+  id uuid NOT NULL,
+  type character varying NOT NULL,
+  notifiable_type character varying NOT NULL,
+  notifiable_id bigint NOT NULL,
+  data text NOT NULL,
+  read_at timestamp without time zone,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT notifications_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.orders (
+  id bigint NOT NULL DEFAULT nextval('orders_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  event_id bigint NOT NULL,
+  montantant_total numeric NOT NULL,
+  statut_paiement character varying NOT NULL DEFAULT 'en_attente'::character varying CHECK (statut_paiement::text = ANY (ARRAY['en_attente'::character varying::text, 'payé'::character varying::text, 'annulé'::character varying::text])),
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT orders_pkey PRIMARY KEY (id),
+  CONSTRAINT orders_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id),
+  CONSTRAINT orders_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.organisateur_profiles (
+  id bigint NOT NULL DEFAULT nextval('organisateur_profiles_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  nom_entreprise character varying,
+  description text,
+  logo character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT organisateur_profiles_pkey PRIMARY KEY (id),
+  CONSTRAINT organisateur_profiles_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.paiements (
+  id bigint NOT NULL DEFAULT nextval('paiements_id_seq'::regclass),
+  order_id bigint NOT NULL,
+  montant numeric NOT NULL,
+  methode character varying NOT NULL DEFAULT 'mobile_money'::character varying CHECK (methode::text = ANY (ARRAY['carte'::character varying::text, 'PayPal'::character varying::text, 'mobile_money'::character varying::text])),
+  statut character varying NOT NULL DEFAULT 'en_attente'::character varying CHECK (statut::text = ANY (ARRAY['en_attente'::character varying::text, 'confirmé'::character varying::text, 'échoué'::character varying::text])),
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT paiements_pkey PRIMARY KEY (id),
+  CONSTRAINT paiements_order_id_foreign FOREIGN KEY (order_id) REFERENCES public.orders(id)
+);
+CREATE TABLE public.password_reset_tokens (
+  email character varying NOT NULL,
+  token character varying NOT NULL,
+  created_at timestamp without time zone,
+  CONSTRAINT password_reset_tokens_pkey PRIMARY KEY (email)
+);
+CREATE TABLE public.personal_access_tokens (
+  id bigint NOT NULL DEFAULT nextval('personal_access_tokens_id_seq'::regclass),
+  tokenable_type character varying NOT NULL,
+  tokenable_id bigint NOT NULL,
+  name character varying NOT NULL,
+  token character varying NOT NULL UNIQUE,
+  abilities text,
+  last_used_at timestamp without time zone,
+  expires_at timestamp without time zone,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT personal_access_tokens_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.plans_souscriptions (
+  id bigint NOT NULL DEFAULT nextval('plans_souscriptions_id_seq'::regclass),
+  nom character varying NOT NULL,
+  description text,
+  prix numeric NOT NULL,
+  duree_jours integer NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT plans_souscriptions_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.point_logs (
+  id bigint NOT NULL DEFAULT nextval('point_logs_id_seq'::regclass),
+  utilisateur_id bigint,
+  event_id bigint,
+  type character varying NOT NULL,
+  points integer NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT point_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT point_logs_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id),
+  CONSTRAINT point_logs_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.poll_options (
+  id bigint NOT NULL DEFAULT nextval('poll_options_id_seq'::regclass),
+  poll_id bigint NOT NULL,
+  text character varying NOT NULL,
+  votes integer NOT NULL DEFAULT 0,
+  description text,
+  type character varying,
+  objet_statut character varying NOT NULL DEFAULT 'actif'::character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT poll_options_pkey PRIMARY KEY (id),
+  CONSTRAINT poll_options_poll_id_foreign FOREIGN KEY (poll_id) REFERENCES public.polls(id)
+);
+CREATE TABLE public.polls (
+  id bigint NOT NULL DEFAULT nextval('polls_id_seq'::regclass),
+  question character varying NOT NULL,
+  description text,
+  type character varying NOT NULL,
+  objet_statut character varying NOT NULL DEFAULT 'actif'::character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT polls_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.promos (
+  id bigint NOT NULL DEFAULT nextval('prmos_id_seq'::regclass),
+  utilisateur_id bigint,
+  title character varying NOT NULL,
+  caption character varying NOT NULL,
+  icon character varying,
+  color character varying,
+  image character varying,
+  description text,
+  type character varying,
+  objet_statut character varying NOT NULL DEFAULT 'actif'::character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT promos_pkey PRIMARY KEY (id),
+  CONSTRAINT prmos_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.reactions (
+  id bigint NOT NULL DEFAULT nextval('reactions_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  type character varying NOT NULL DEFAULT 'like'::character varying,
+  reactable_type character varying NOT NULL,
+  reactable_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT reactions_pkey PRIMARY KEY (id),
+  CONSTRAINT reactions_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.shares (
+  id bigint NOT NULL DEFAULT nextval('shares_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  shareable_type character varying NOT NULL,
+  shareable_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT shares_pkey PRIMARY KEY (id),
+  CONSTRAINT shares_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.souscriptions (
+  id bigint NOT NULL DEFAULT nextval('souscriptions_id_seq'::regclass),
+  organisateur_id bigint NOT NULL,
+  utilisateur_id bigint NOT NULL,
+  date_debut date NOT NULL,
+  date_fin date NOT NULL,
+  statut character varying NOT NULL DEFAULT 'actif'::character varying CHECK (statut::text = ANY (ARRAY['actif'::character varying::text, 'expiré'::character varying::text, 'annulé'::character varying::text])),
+  methode character varying NOT NULL DEFAULT 'mobile_money'::character varying CHECK (methode::text = ANY (ARRAY['carte'::character varying::text, 'PayPal'::character varying::text, 'mobile_money'::character varying::text])),
+  statut_paiement character varying NOT NULL DEFAULT 'en_attente'::character varying CHECK (statut_paiement::text = ANY (ARRAY['en_attente'::character varying::text, 'success'::character varying::text, 'echoue'::character varying::text])),
+  montant numeric NOT NULL,
+  reference character varying NOT NULL UNIQUE,
+  souscription_fedapay_id bigint,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  plans_souscription_id bigint NOT NULL,
+  CONSTRAINT souscriptions_pkey PRIMARY KEY (id),
+  CONSTRAINT souscriptions_organisateur_id_foreign FOREIGN KEY (organisateur_id) REFERENCES public.organisateur_profiles(id),
+  CONSTRAINT souscriptions_plans_souscription_id_foreign FOREIGN KEY (plans_souscription_id) REFERENCES public.plans_souscriptions(id),
+  CONSTRAINT souscriptions_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.stories (
+  id bigint NOT NULL DEFAULT nextval('stories_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  media_path character varying NOT NULL,
+  expires_at timestamp without time zone NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT stories_pkey PRIMARY KEY (id),
+  CONSTRAINT stories_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.suivis (
+  id bigint NOT NULL DEFAULT nextval('suivis_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  suivi_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT suivis_pkey PRIMARY KEY (id),
+  CONSTRAINT suivis_suivi_id_foreign FOREIGN KEY (suivi_id) REFERENCES public.utilisateurs(id),
+  CONSTRAINT suivis_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.tags (
+  id bigint NOT NULL DEFAULT nextval('tags_id_seq'::regclass),
+  nom character varying NOT NULL UNIQUE,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT tags_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.tests (
+  id bigint NOT NULL DEFAULT nextval('tests_id_seq'::regclass),
+  qr_code character varying NOT NULL UNIQUE,
+  event_id bigint NOT NULL,
+  status_scan character varying NOT NULL DEFAULT 'non_scanné'::character varying,
+  scanned_at timestamp without time zone,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  image character varying,
+  CONSTRAINT tests_pkey PRIMARY KEY (id),
+  CONSTRAINT tests_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.tickets (
+  id bigint NOT NULL DEFAULT nextval('tickets_id_seq'::regclass),
+  event_id bigint NOT NULL,
+  type character varying NOT NULL DEFAULT 'standart'::character varying,
+  prix numeric NOT NULL,
+  image character varying,
+  quantité_disponible integer NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  date_limite_vente timestamp without time zone,
+  quantite_restante integer NOT NULL DEFAULT 0,
+  CONSTRAINT tickets_pkey PRIMARY KEY (id),
+  CONSTRAINT tickets_event_id_foreign FOREIGN KEY (event_id) REFERENCES public.events(id)
+);
+CREATE TABLE public.transactions (
+  id bigint NOT NULL DEFAULT nextval('transactions_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  order_id bigint,
+  souscription_id bigint,
+  reference character varying NOT NULL UNIQUE,
+  methode character varying NOT NULL DEFAULT 'mobile_money'::character varying CHECK (methode::text = ANY (ARRAY['carte'::character varying::text, 'PayPal'::character varying::text, 'mobile_money'::character varying::text])),
+  status character varying NOT NULL DEFAULT 'en_attente'::character varying CHECK (status::text = ANY (ARRAY['en_attente'::character varying::text, 'reussi'::character varying::text, 'echoue'::character varying::text])),
+  montant numeric NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT transactions_pkey PRIMARY KEY (id),
+  CONSTRAINT transactions_order_id_foreign FOREIGN KEY (order_id) REFERENCES public.orders(id),
+  CONSTRAINT transactions_souscription_id_foreign FOREIGN KEY (souscription_id) REFERENCES public.souscriptions(id),
+  CONSTRAINT transactions_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id)
+);
+CREATE TABLE public.users (
+  id bigint NOT NULL DEFAULT nextval('users_id_seq'::regclass),
+  name character varying NOT NULL,
+  email character varying NOT NULL UNIQUE,
+  email_verified_at timestamp without time zone,
+  password character varying NOT NULL,
+  remember_token character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT users_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.utilisateur_badges (
+  id bigint NOT NULL DEFAULT nextval('utilisateur_badges_id_seq'::regclass),
+  utilisateur_id bigint NOT NULL,
+  badge_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT utilisateur_badges_pkey PRIMARY KEY (id),
+  CONSTRAINT utilisateur_badges_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id),
+  CONSTRAINT utilisateur_badges_badge_id_foreign FOREIGN KEY (badge_id) REFERENCES public.badges(id)
+);
+CREATE TABLE public.utilisateur_tag (
+  utilisateur_id bigint NOT NULL,
+  tag_id bigint NOT NULL,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT utilisateur_tag_pkey PRIMARY KEY (utilisateur_id, tag_id),
+  CONSTRAINT utilisateur_tag_utilisateur_id_foreign FOREIGN KEY (utilisateur_id) REFERENCES public.utilisateurs(id),
+  CONSTRAINT utilisateur_tag_tag_id_foreign FOREIGN KEY (tag_id) REFERENCES public.tags(id)
+);
+CREATE TABLE public.utilisateurs (
+  id bigint NOT NULL DEFAULT nextval('utilisateurs_id_seq'::regclass),
+  nom character varying NOT NULL,
+  email character varying NOT NULL UNIQUE,
+  email_verified_at timestamp without time zone,
+  password character varying NOT NULL,
+  avatar character varying,
+  otp character varying,
+  otp_expires_at timestamp without time zone,
+  role character varying NOT NULL DEFAULT 'client'::character varying CHECK (role::text = ANY (ARRAY['client'::character varying::text, 'organisateur'::character varying::text, 'scanneur'::character varying::text, 'admin'::character varying::text])),
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  last_seen_at timestamp without time zone,
+  google_id character varying,
+  points integer NOT NULL DEFAULT 0,
+  statut_compte character varying NOT NULL DEFAULT 'actif'::character varying,
+  CONSTRAINT utilisateurs_pkey PRIMARY KEY (id)
+);

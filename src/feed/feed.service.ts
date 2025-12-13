@@ -15,10 +15,6 @@ export class FeedService {
       ...(cursor && { skip: 1, cursor: { id: Number(cursor) } }),
     });
 
-    // const articles = await prisma.articles.findMany({
-    //   take: limit,
-    //   orderBy: { created_at: 'desc' },
-    // });
 
     // Exemple : transformer les résultats en format attendu par Flutter
     const items = [
@@ -40,15 +36,8 @@ export class FeedService {
           affiche: e.affiche,
         },
       })),
-      // ...articles.map((a) => ({
-      //   type: 'article',
-      //   payload: {
-      //     id: a.id,
-      //     title: a.title,
-      //     content: a.content,
-      //     image: a.image,
-      //   },
-      // })),
+      
+    
     ];
 
     // Pagination simplifiée
@@ -61,7 +50,19 @@ export class FeedService {
     };
   }
 }
-
+// const articles = await prisma.articles.findMany({
+    //   take: limit,
+    //   orderBy: { created_at: 'desc' },
+    // });
+      // ...articles.map((a) => ({
+      //   type: 'article',
+      //   payload: {
+      //     id: a.id,
+      //     title: a.title,
+      //     content: a.content,
+      //     image: a.image,
+      //   },
+      // })),
 
 // import { Injectable } from '@nestjs/common';
 // import { PrismaService } from '../prisma/prisma.service';
