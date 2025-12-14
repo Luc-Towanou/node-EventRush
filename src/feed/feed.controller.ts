@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from '@nestjs/common';
+import { Controller, Get, Query, Req } from '@nestjs/common';
 import { FeedService } from './feed.service';
 
 @Controller('feed')
@@ -7,12 +7,15 @@ export class FeedController {
 
   @Get()
   async getFeed(
+    @Req() req,
     @Query('pageType') pageType: string,
     @Query('limit') limit = 20,
     @Query('cursor') cursor?: string,
   ) {
-    return this.feedService.getFeed({
-      pageType,
+    const userId = req.user?.id;
+    return this.feedService.getFeed(Number(userId), {
+      // userId : Number(userId),
+      // pageType,
       limit: Number(limit),
       cursor,
     });
