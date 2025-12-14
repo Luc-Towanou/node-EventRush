@@ -1,22 +1,40 @@
-import { Controller, Get, Query, Req } from '@nestjs/common';
+import { Controller, Get, Query, Req, UseGuards } from '@nestjs/common';
 import { FeedService } from './feed.service';
+import { ApiBearerAuth } from '@nestjs/swagger';
+import { SanctumGuard } from 'src/common/guards/sanctum.guard';
 
 @Controller('feed')
 export class FeedController {
   constructor(private readonly feedService: FeedService) {}
 
+  // @Get()
+  // async getFeed(
+  //   // @Req() req,
+  //   @Query('userId') userId: string,
+  //   @Query('pageType') pageType: string,
+  //   @Query('limit') limit = 20,
+  //   @Query('cursor') cursor?: string,
+  // ) {
+  //   // const userId = req.user?.id;
+  //   return this.feedService.getFeed(Number(userId), {
+  //     // userId : Number(userId),
+  //     // pageType,
+  //     limit: Number(limit),
+  //     cursor,
+  //   });
+  // }
   @Get()
+  @ApiBearerAuth('sanctumAuth')
+  @UseGuards(SanctumGuard)
   async getFeed(
-    // @Req() req,
-    @Query('userId') userId: string,
+    @Req() req,
     @Query('pageType') pageType: string,
     @Query('limit') limit = 20,
     @Query('cursor') cursor?: string,
   ) {
-    // const userId = req.user?.id;
+    const userId = req.user?.id; // injecté par ton guard/middleware
+
     return this.feedService.getFeed(Number(userId), {
-      // userId : Number(userId),
-      // pageType,
       limit: Number(limit),
       cursor,
     });

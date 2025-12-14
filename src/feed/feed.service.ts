@@ -154,7 +154,7 @@ export class FeedService {
     // 3️⃣ Événements suivis par le user
     const followedEvents = await prisma.events.findMany({
       where: {
-        favoris: { some: { utilisateur_id: userId } },
+        favoris: { some: { utilisateur_id: BigInt(userId) } },
       },
       take: limit,
       orderBy: { created_at: 'desc' },
@@ -163,7 +163,7 @@ export class FeedService {
     // 4️⃣ Événements billets achetés
     const purchasedEvents = await prisma.events.findMany({
       where: {
-        billets: { some: { utilisateur_id: userId } },
+        billets: { some: { utilisateur_id: BigInt(userId) } },
       },
       take: limit,
       orderBy: { date_debut: 'asc' },
