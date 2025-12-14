@@ -7,12 +7,13 @@ export class FeedController {
 
   @Get()
   async getFeed(
-    @Req() req,
+    // @Req() req,
+    @Query('userId') userId: string,
     @Query('pageType') pageType: string,
     @Query('limit') limit = 20,
     @Query('cursor') cursor?: string,
   ) {
-    const userId = req.user?.id;
+    // const userId = req.user?.id;
     return this.feedService.getFeed(Number(userId), {
       // userId : Number(userId),
       // pageType,
